@@ -3,6 +3,7 @@ using System.Net;
 using Xamarin.Android.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Net.Http.Headers;
 
 namespace DemoAndroidBasicAuth.Droid
 {
@@ -20,10 +21,24 @@ namespace DemoAndroidBasicAuth.Droid
             //Get a 401 response from the server
             var badResponse = await client.GetAsync(basicUri) as AndroidHttpResponseMessage;
             //Double-check that the server and credentials really work, by spoofing the Auth header.
-            var spoofedSuccessResponse = await FakeBasicAuthCredentials(client);
+            var spoofedSuccessResponse = await FakeBasicAuthCredentialsOnMessage(client);
+            //Add the header to the client.
+            var homeMadeClient = GetClientWithHomemadeAuthHeader(handler);
+            var anotherSpoofedSuccessResponse = await homeMadeClient.GetAsync(basicUri) as AndroidHttpResponseMessage;
+
         }
 
-        private async Task<AndroidHttpResponseMessage> FakeBasicAuthCredentials(HttpClient client)
+        private HttpClient GetClientWithHomemadeAuthHeader(AndroidClientHandler handler)
+        {
+            byte[] byteToken = System.Text.Encoding.UTF8.GetBytes(dummyUsername + ":" + dummyPassword);
+            var tokenValue = Convert.ToBase64String(byteToken);
+
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", tokenValue);
+            return client;
+        }
+
+        private async Task<AndroidHttpResponseMessage> FakeBasicAuthCredentialsOnMessage(HttpClient client)
         {
             byte[] byteToken = System.Text.Encoding.UTF8.GetBytes(dummyUsername + ":" + dummyPassword);
             var tokenValue = Convert.ToBase64String(byteToken);
