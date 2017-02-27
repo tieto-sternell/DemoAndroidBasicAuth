@@ -17,6 +17,7 @@ namespace DemoAndroidBasicAuth.Droid
         {
             //Setup AndroidClientHandler with ICredentials
             var handler = GetBasicHandler();
+
             var client = new HttpClient(handler);
             //Get a 401 response from the server
             var badResponse = await client.GetAsync(basicUri) as AndroidHttpResponseMessage;
@@ -25,7 +26,11 @@ namespace DemoAndroidBasicAuth.Droid
             //Add the header to the client.
             var homeMadeClient = GetClientWithHomemadeAuthHeader(handler);
             var anotherSpoofedSuccessResponse = await homeMadeClient.GetAsync(basicUri) as AndroidHttpResponseMessage;
-
+            //use the android java stack:
+            var javaUri = new Java.Net.URL(basicUri);
+            var connection = (Java.Net.HttpURLConnection)new Java.Net.URL(basicUri).OpenConnection();
+            connection.RequestMethod = "GET";
+            var responseMessage = new AndroidHttpResponseMessage(javaUri, connection);
         }
 
         private HttpClient GetClientWithHomemadeAuthHeader(AndroidClientHandler handler)
