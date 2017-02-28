@@ -27,10 +27,21 @@ namespace DemoAndroidBasicAuth.Droid
             var homeMadeClient = GetClientWithHomemadeAuthHeader(handler);
             var anotherSpoofedSuccessResponse = await homeMadeClient.GetAsync(basicUri) as AndroidHttpResponseMessage;
             //use the android java stack:
+            var javaResponse = MakeBasicRequestWithJavaStack();
+        }
+
+        private static Java.Net.HttpStatus MakeBasicRequestWithJavaStack()
+        {
             var javaUri = new Java.Net.URL(basicUri);
             var connection = (Java.Net.HttpURLConnection)new Java.Net.URL(basicUri).OpenConnection();
             connection.RequestMethod = "GET";
-            var responseMessage = new AndroidHttpResponseMessage(javaUri, connection);
+            connection.SetRequestProperty("User-Agent", "Mozilla/5.0");
+
+            byte[] byteToken = System.Text.Encoding.UTF8.GetBytes(dummyUsername + ":" + dummyPassword);
+            var tokenValue = Convert.ToBase64String(byteToken);
+            connection.SetRequestProperty("Authorization","basic " + tokenValue);
+
+            return connection.ResponseCode;
         }
 
         private HttpClient GetClientWithHomemadeAuthHeader(AndroidClientHandler handler)
